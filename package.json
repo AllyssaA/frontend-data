@@ -1,4 +1,11 @@
 {
+  "name": "functional-data",
+  "version": "1.0.0",
+  "description": "HVA CMD Functional Data seminar",
+  "main": "index.js",
+  "scripts": {
+    "nodemon": "node_modules/.bin/nodemon index.js"
+  },
   "dependencies": {
     "express": "^4.17.1"
   },
