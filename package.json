@@ -1,7 +1,7 @@
 {
-  "name": "functional-data",
+  "name": "frontend-data",
   "version": "1.0.0",
-  "description": "HVA CMD Functional Data seminar",
+  "description": "HVA CMD Frontend Data seminar",
   "main": "index.js",
   "scripts": {
     "nodemon": "node_modules/.bin/nodemon index.js"
