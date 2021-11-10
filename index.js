@@ -1,12 +1,30 @@
-const express = require('express')
-const path = require('path')
-const app = express()
-const port = 3000
+console.log('hello world')
 
-// https://www.digitalocean.com/community/tutorials/use-expressjs-to-deliver-html-files
-app.get('/', function(req, res) {
-    res.sendFile(path.join(__dirname, '/index.html'))
-  })
+function getData() {
+  d3.json('https://www.fruityvice.com/api/fruit/all')
+    .then(x => {
+      console.log(x)
+    })
+}
 
-  app.listen(port)
-  console.log('Server started at http://localhost:' + port)
+getData()
+
+// d3.select('.circle').text('Hello mamallyssa')
+const svg = d3.select('svg') 
+svg.style("border", "2px dotted red")
+
+
+svg.append('circle')
+    .attr("cx", 19)
+    .attr("cy", 25)
+    .attr("r", 20)
+    .style("fill", "red")
+
+svg.append('rect')
+  .attr("width", 20)
+  .attr("height", 20)
+  .attr("x", 19)
+  .attr("y", 25)
+  .style("fill", "yellow")
+  .style("stroke", "black")
+  .style("stroke-width", 2)

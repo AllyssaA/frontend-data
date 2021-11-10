@@ -1,0 +1,9 @@
+circle:nth-child(odd) {
+    fill: #ffcc00;
+    stroke: black;
+    stroke-width: 2px;
+}
+
+svg {
+    border: 1px solid black;
+}
