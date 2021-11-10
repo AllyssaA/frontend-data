@@ -1,30 +1,19 @@
 console.log('hello world')
 
-function getData() {
-  d3.json('https://www.fruityvice.com/api/fruit/all')
-    .then(x => {
-      console.log(x)
-    })
-}
+const margin = {top: 40, bottom: 10, left: 120, right: 20}
+const width = 800 - margin.left - margin.right
+const height = 600 - margin.top - margin.bottom
 
-getData()
-
-// d3.select('.circle').text('Hello mamallyssa')
-const svg = d3.select('svg') 
-svg.style("border", "2px dotted red")
+// Create svg element
+const svg = d3.select('body').append('svg')
+  .attr('width', width + margin.left + margin.right)
+  .attr('height', height + margin.top + margin.bottom)
 
 
-svg.append('circle')
-    .attr("cx", 19)
-    .attr("cy", 25)
-    .attr("r", 20)
-    .style("fill", "red")
+  const g = svg.append('g')
+    .attr('transform', 'translate(${margin.left}, ${margin.top})')
 
-svg.append('rect')
-  .attr("width", 20)
-  .attr("height", 20)
-  .attr("x", 19)
-  .attr("y", 25)
-  .style("fill", "yellow")
-  .style("stroke", "black")
-  .style("stroke-width", 2)
+  // global var for data
+  const data = [66.38, 21.51, 23.37, 34.17, 36.21]
+
+  const barHeight = 50

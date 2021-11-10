@@ -1,3 +1,21 @@
+body {
+    width: 800px;
+    margin: 25px auto;
+}
+
+rect {
+    fill: steelblue;
+    fill-opacity: 0.8;
+}
+
+rect:hover{
+    fill-opacity: 1;
+}
+
+.axis {
+    font-size: smaller;
+}
+
 circle:nth-child(odd) {
     fill: #ffcc00;
     stroke: black;
