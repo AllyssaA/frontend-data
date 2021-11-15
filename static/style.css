@@ -1,17 +1,15 @@
 body {
     width: 800px;
     margin: 25px auto;
-}
-
-rect {
+    font-family: "Helvetica Neue", Helvetica, Arial, "Lucida Grande", sans-serif;
+  }
+  rect {
     fill: steelblue;
     fill-opacity: 0.8;
-}
-
-rect:hover{
+  }
+  rect:hover {
     fill-opacity: 1;
-}
-
-.axis {
+  }
+  .axis {
     font-size: smaller;
-}
+  }
