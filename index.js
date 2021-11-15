@@ -36,12 +36,13 @@ const rect = g.selectAll('rect').data(data).join(
   (exit) => exit.remove()
 )
 
-
+// Enter + update old and new elements
 rect
   .attr('height', bar_height)
   .attr('width', (d) => d * 7)
   .attr('y', (d, i) => i * (bar_height + 5))
 
+rect.select('title').text((d) => `value: ${d}`)
 // fetch(`http://hp-api.herokuapp.com/api/characters`).then( 
 //   x => {
 //     return x.json()
