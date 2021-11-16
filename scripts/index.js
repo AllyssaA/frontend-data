@@ -1,4 +1,4 @@
-import { findOcc } from "./modules/ultilities";
+import { findOcc } from "./modules/ultilities.js";
 
 const API = "http://hp-api.herokuapp.com/api/characters";
 
@@ -16,6 +16,12 @@ async function getGenders(API) {
   }
 }
 
+const margin = 10;
+const radius = 100;
+const width = 460 - margin.l - margin.r;
+const height = 400 - margin.t - margin.b;
+
 let key = "gender";
-console.log(findOcc(arr, key));
+//console.log(findOcc(arr, key));
 console.log(getGenders);
+
