@@ -147,3 +147,10 @@ svg
   })
   .style("text-anchor", "middle")
   .style("font-size", 17);
+
+
+// Event listener voor de radiobutton
+d3.select("#radioButton").on('change', function () {
+    const selected = d3.select(this).property('value');
+
+})
