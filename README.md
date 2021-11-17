@@ -18,7 +18,6 @@ Clone repo
 
 ```
 git clone https://github.com/AllyssaA/frontend-data.git
-
 ```
 
 # Documentation
