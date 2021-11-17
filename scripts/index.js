@@ -32,7 +32,7 @@ const opschoning = async (data) => {
       const character = {
         name: d.name,
         gender: d.gender,
-        house: d.house,
+        house: fixSpellingMistake(d.house),
         isStaff: d.hogwartsStaff,
         isStudent: d.hogwartsStudent,
       };
@@ -55,7 +55,22 @@ async function getOccurencesOf(data, key) {
   }
 }
 
+function fixSpellingMistake(house) {
+  switch (house) {
+    case "Huffleluff":
+      return "Hufflepuff";
+    case "Slythetin":
+      return "Slytherin";
+    default:
+      return house;
+  }
+}
+
+console.log(fixSpellingMistake("Huffleluff"));
+
 const bibi = await getOccurencesOf(await opschoning(dataset(URL)), "gender");
+const house = await getOccurencesOf(await opschoning(dataset(URL)), "house");
+console.log(house);
 // console.log(await bibi)
 
 // ------------------- d3 magie ------------------- OWN
@@ -92,12 +107,11 @@ const pie = d3.pie().value((d) => {
   return d[1];
 });
 
-
 // const dummy = { a: 9, b: 20, c: 30 };
 const pipi = {
   male: bibi[0].amount,
   female: bibi[1].amount,
-}
+};
 
 // const data_dum = pie(Object.entries(dummy));
 const data_ready = pie(Object.entries(pipi));
@@ -107,8 +121,8 @@ const arcGenerator = d3
   .innerRadius(0) //why 0? innerlijk
   .outerRadius(radius); //uiterlijk?
 
-
-svg.select('g')
+svg
+  .select("g")
   .selectAll("mySlices")
   .data(data_ready)
   .join("path")
@@ -120,7 +134,8 @@ svg.select('g')
   .style("stroke-width", "2px")
   .style("opacity", 0.7);
 
-svg.select('g')
+svg
+  .select("g")
   .selectAll("mySlices")
   .data(data_ready)
   .join("text")
@@ -132,5 +147,3 @@ svg.select('g')
   })
   .style("text-anchor", "middle")
   .style("font-size", 17);
-
-
