@@ -43,9 +43,6 @@ const opschoning = async (data) => {
   }
 };
 
-// const test = await opschoning(dataset(URL))
-// console.log(test)
-
 async function getOccurencesOf(data, key) {
   try {
     // console.log(findOcc(data, key));
@@ -68,10 +65,8 @@ function fixSpellingMistake(house) {
 
 console.log(fixSpellingMistake("Huffleluff"));
 
-const bibi = await getOccurencesOf(await opschoning(dataset(URL)), "gender");
-const house = await getOccurencesOf(await opschoning(dataset(URL)), "house");
-console.log(house);
-// console.log(await bibi)
+const gender = await getOccurencesOf(await opschoning(dataset(URL)), "gender");
+const houses = await getOccurencesOf(await opschoning(dataset(URL)), "house");
 
 // ------------------- d3 magie ------------------- OWN
 const svg = d3
@@ -107,50 +102,99 @@ const pie = d3.pie().value((d) => {
   return d[1];
 });
 
-// const dummy = { a: 9, b: 20, c: 30 };
-const pipi = {
-  male: bibi[0].amount,
-  female: bibi[1].amount,
+// Count all male and female genders
+const allGenders = {
+  male: gender[0].amount,
+  female: gender[1].amount,
 };
 
-// const data_dum = pie(Object.entries(dummy));
-const data_ready = pie(Object.entries(pipi));
+const allHouses = {};
+houses.forEach((element) => {
+  allHouses[element.house] = element.amount;
+});
 
-const arcGenerator = d3
-  .arc()
-  .innerRadius(0) //why 0? innerlijk
-  .outerRadius(radius); //uiterlijk?
+/* 
+  Het volgende dat gedaan moet worden is als volgt;
+  * Een update functie die de data wisselt wanneer je op een radio button klikt (update functie zal dan de value van selected radio button uitlezen)
+  * Een helper functie schrijven die lege house names vervangt met een andere string
+  * Gender prefix title vervangen met house of weghalen.
+  * 
+  * Vervolgens zou je de code nog kunnen opsplitsen in functies.
+*/
 
-svg
-  .select("g")
-  .selectAll("mySlices")
-  .data(data_ready)
-  .join("path")
-  .attr("d", arcGenerator)
-  .attr("fill", (d) => {
-    return color(d.data[0]);
-  }) //why the first element
-  .attr("stroke", "black")
-  .style("stroke-width", "2px")
-  .style("opacity", 0.7);
+function createPie(data) {
+  const data_ready = pie(Object.entries(data));
+  const arcGenerator = d3
+    .arc()
+    .innerRadius(0) //why 0? innerlijk
+    .outerRadius(radius); //uiterlijk?
 
-svg
-  .select("g")
-  .selectAll("mySlices")
-  .data(data_ready)
-  .join("text")
-  .text(function (d) {
-    return "gender " + d.data[0];
-  })
-  .attr("transform", function (d) {
-    return `translate(${arcGenerator.centroid(d)})`;
-  })
-  .style("text-anchor", "middle")
-  .style("font-size", 17);
+  svg
+    .select("g")
+    .attr("class", "test")
+    .selectAll("mySlices")
+    .data(data_ready)
+    .join(
+      (enter) => {
+        const e = enter.append("path");
+        return e;
+      },
+      (update) => {
+        return update;
+      },
+      (exit) => {
+        return exit.remove();
+      }
+    )
+    .attr("d", arcGenerator)
+    .attr("fill", (d) => {
+      return color(d.data[0]);
+    }) //why the first element
+    .attr("stroke", "blue")
+    .style("stroke-width", "2px")
+    .style("opacity", 0.7);
+
+  svg
+    .select("g")
+    .selectAll("mySlices")
+    .data(data_ready)
+    .join(
+      (enter) => {
+        const e = enter.append("text");
+        return e;
+      },
+      (update) => {
+        update.style('color', 'pink')
+        return update;
+      },
+      (exit) => {
+        return exit.remove();
+      }
+    )
+    .text(function (d) {
+      return d.data[0];
+    })
+    .attr("transform", function (d) {
+      return `translate(${arcGenerator.centroid(d)})`;
+    })
+    .style("text-anchor", "middle");
+}
+
+const updatePie = (dataset = allGenders) => {
+  console.log(`current dataset: ${dataset}`)
+  createPie(dataset)
+}
+
+updatePie()
 
 
-// Event listener voor de radiobutton
-d3.select("#radioButton").on('change', function () {
-    const selected = d3.select(this).property('value');
+const buttons = d3
+  .select("body")
+  .append("button")
+  .attr("class", "test")
+  .text("GET OUTTA HOUSE");
+buttons.on("click", () => {
+  updatePie(allHouses);
+});
 
-})
+
