@@ -1,45 +1,52 @@
 import { findOcc } from "./modules/util.js";
 
+const VISUALISATION = d3.select("body").append("div").attr("id", "graph");
+const tooltip = d3.select("body").append("div").attr("class", "toolTip");
 console.log(`%cHello Allyssa`, `color: red; background-color: yellow;`);
 // https://www.d3-graph-gallery.com/graph/pie_annotation.html
 
 const URL = "https://hp-api.herokuapp.com/api/characters";
 
-// ------------------- data magie -------------------
-/**
- * @description dataset functie haalt data op met de methode d3.json
- * @param {string} url api endpoint
- * @returns {Object} returned json object
- */
-const dataset = async (url) => {
+// Retrieve data
+async function getData(url) {
   try {
-    const data = d3.json(url);
-    return await data;
+    const res = await d3.json(url);
+    console.log("getData:", await res);
+    return res;
   } catch (error) {
-    console.error(error);
+    console.error(`getData: Error at retrieving data: ${error}`);
   }
-};
+}
 
-/**
- * @description specifieke data uit de api ophalen
- * @param {object} data opschoning data object
- * @returns returned een array van hp characters
- */
-const opschoning = async (data) => {
-  const vies = await data;
+function fixSpellingMistake(house) {
+  switch (house) {
+    case "Huffleluff":
+      return "Hufflepuff";
+    case "Slythetin":
+      return "Slytherin";
+    case "":
+      return "Not sorted";
+    default:
+      return house;
+  }
+}
+
+const sanitize = async (dataset) => {
+  const dirtyData = await dataset;
+  // console.log('sanitize, dirtydata:',dirtyData)
   try {
-    return vies.map((d) => {
-      const character = {
+    return dirtyData.map((d) => {
+      const characters = {
         name: d.name,
         gender: d.gender,
         house: fixSpellingMistake(d.house),
         isStaff: d.hogwartsStaff,
         isStudent: d.hogwartsStudent,
       };
-      return character;
+      return characters;
     });
   } catch (error) {
-    console.error(error);
+    console.warn("Something went wrong with sanitizing", error);
   }
 };
 
@@ -52,149 +59,95 @@ async function getOccurencesOf(data, key) {
   }
 }
 
-function fixSpellingMistake(house) {
-  switch (house) {
-    case "Huffleluff":
-      return "Hufflepuff";
-    case "Slythetin":
-      return "Slytherin";
-    default:
-      return house;
-  }
-}
+const houses = await getOccurencesOf(await sanitize(getData(URL)), "house");
+console.log(houses);
+// Just needed when to use a circle diagram
+// const allHouses = {};
+// houses.forEach((element) => {
+//   // allHouses[element.house] = element.amount;
+// });
+// console.log(allHouses)
 
-console.log(fixSpellingMistake("Huffleluff"));
+// ------------------------ D3 ------------------------
+// Defined Size constraints
+const MARGIN = { t: 20, l: 40, r: 40, b: 20 };
+const HEIGHT = 600 - (MARGIN.t - MARGIN.b);
+const WIDTH = 800 - (MARGIN.l - MARGIN.r);
 
-const gender = await getOccurencesOf(await opschoning(dataset(URL)), "gender");
-const houses = await getOccurencesOf(await opschoning(dataset(URL)), "house");
-
-// ------------------- d3 magie ------------------- OWN
-const svg = d3
-  .select("body")
-  .append("div")
-  .attr("id", "datavisualisatie")
+const SVG = d3
+  .select("#graph")
   .append("svg")
-  .style("border", "solid 1px black");
-
-/**
- * @Object
- * @property width {Number} Width in a numerical value
- * @property height {Number} Height in a numerical value
- * @property margin {Number} Margin in a numerical value
- */
-const dim = {
-  width: 450,
-  height: 450,
-  margin: 40,
-};
-
-const radius = Math.min(dim.width, dim.height) / 2 - dim.margin;
-
-svg
-  .attr("width", dim.width)
-  .attr("height", dim.height)
+  .attr("height", HEIGHT + MARGIN.t + MARGIN.b)
+  .attr("width", WIDTH + MARGIN.l + MARGIN.r)
+  .style("border", "1px solid #FFCC00")
   .append("g")
-  .attr("transform", `translate(${dim.width / 2}, ${dim.height / 2})`);
+  .attr("transform", `translate(${MARGIN.l}, ${MARGIN.t})`);
 
-const color = d3.scaleOrdinal().range(d3.schemeSet2);
+const x = d3.scaleBand().range([0, WIDTH]).padding(0.4);
 
-const pie = d3.pie().value((d) => {
-  return d[1];
-});
+const y = d3.scaleLinear().range([HEIGHT, 0]);
 
-// Count all male and female genders
-const allGenders = {
-  male: gender[0].amount,
-  female: gender[1].amount,
-};
+const xas = d3.axisBottom(x);
+const xScale = SVG.append("g")
+  .attr("class", "x-scale")
+  .attr("transform", `translate(0, ${HEIGHT})`);
 
-const allHouses = {};
-houses.forEach((element) => {
-  allHouses[element.house] = element.amount;
-});
+const yas = d3.axisLeft(y);
+const yScale = SVG.append("g").attr("class", "y-scale");
 
-/* 
-  Het volgende dat gedaan moet worden is als volgt;
-  * Een update functie die de data wisselt wanneer je op een radio button klikt (update functie zal dan de value van selected radio button uitlezen)
-  * Een helper functie schrijven die lege house names vervangt met een andere string
-  * Gender prefix title vervangen met house of weghalen.
-  * 
-  * Vervolgens zou je de code nog kunnen opsplitsen in functies.
-*/
+function render(dataset) {
+  x.domain(dataset.map((d) => d.house));
+  y.domain([0, d3.max(dataset, (d) => d.amount)]);
+  // y.domain(d3.extent(dataset)) //of ([0, d3.max(data, d => d.amount)])
 
-function createPie(data) {
-  const data_ready = pie(Object.entries(data));
-  const arcGenerator = d3
-    .arc()
-    .innerRadius(0) //why 0? innerlijk
-    .outerRadius(radius); //uiterlijk?
+  // Call the x axis
+  xScale.transition().call(xas).selectAll("text");
 
-  svg
-    .select("g")
-    .attr("class", "test")
-    .selectAll("mySlices")
-    .data(data_ready)
+  // Call the y axis
+  yScale.call(yas);
+
+  // Create bars, add data, join
+  // populeert de grafiek met de dataset dmv rechthoeke nte creeren met de data
+  const bars = SVG.selectAll("rect")
+    .data(dataset)
     .join(
-      (enter) => {
-        const e = enter.append("path");
-        return e;
-      },
-      (update) => {
-        return update;
-      },
-      (exit) => {
-        return exit.remove();
-      }
+      // voegt rectangle toe aan de grafiek
+      (enter) => enter.append("rect"),
+      // wanner het wordt geupdate wordt een styling toegevoegd aan elementen
+      (update) => update.style("fill", "#FFCC00"),
+      // voert de volgende acties uit wanneer een element wordt verwijderd
+      (exit) => exit.transition().remove()
     )
-    .attr("d", arcGenerator)
-    .attr("fill", (d) => {
-      return color(d.data[0]);
-    }) //why the first element
-    .attr("stroke", "blue")
-    .style("stroke-width", "2px")
-    .style("opacity", 0.7);
+    .on("mouseover", (d) => {
+      
+      tooltip
+        .style("left", event.pageX - 50 + "px")
+        .style("top", event.pageY - 70 + "px")
+        .style("display", "inline-block")
+        .html(d.house + "<br>" + d.amount);
+    })
+    .on("mouseout", (d) => {
+      tooltip.style("display", "none");
+    })
+    .on("mousemove", (d) => {
+      tooltip.style("display", "none");
+    })
 
-  svg
-    .select("g")
-    .selectAll("mySlices")
-    .data(data_ready)
-    .join(
-      (enter) => {
-        const e = enter.append("text");
-        return e;
-      },
-      (update) => {
-        update.style('color', 'pink')
-        return update;
-      },
-      (exit) => {
-        return exit.remove();
-      }
-    )
-    .text(function (d) {
-      return d.data[0];
+  //Do some bar attributing
+  bars
+    .transition()
+    .attr("x", (d) => {
+      return x(d.house);
     })
-    .attr("transform", function (d) {
-      return `translate(${arcGenerator.centroid(d)})`;
+    .attr("width", x.bandwidth())
+    .attr("y", (d) => {
+      return y(d.amount);
     })
-    .style("text-anchor", "middle");
+    .attr("height", (d) => {
+      return HEIGHT - y(d.amount);
+    })
+    .style("fill", "#FFCC00")
+    // some tooltips
 }
 
-const updatePie = (dataset = allGenders) => {
-  console.log(`current dataset: ${dataset}`)
-  createPie(dataset)
-}
-
-updatePie()
-
-
-const buttons = d3
-  .select("body")
-  .append("button")
-  .attr("class", "test")
-  .text("GET OUTTA HOUSE");
-buttons.on("click", () => {
-  updatePie(allHouses);
-});
-
-
+render(houses);
